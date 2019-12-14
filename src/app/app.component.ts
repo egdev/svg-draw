@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Shape } from './svg/shape';
 
 @Component({
   selector: 'app-root',
@@ -8,10 +9,11 @@ import { Component } from '@angular/core';
 export class AppComponent {
   title = 'svg-draw';
   coords: string;
+  private shapes: Array<Shape> = [];
 
-  public updateCoords(event: string)
+  public updateShapes(event: Array<Shape>)
   {
     console.log(event);
-    this.coords = event;
+    this.shapes = event;
   }
 }

@@ -1,7 +1,8 @@
 import { Component, OnInit, OnDestroy, Input, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { Point } from './point';
-import { CdkDragMove, CdkDragStart, CdkDragRelease } from '@angular/cdk/drag-drop';
+import { Polygon } from './polygon';
+import { Shape } from './shape';
 
 
 @Component({
@@ -17,23 +18,26 @@ export class SvgComponent implements OnInit, OnDestroy {
   @Input() stroke: string;
   @Input() strokeWidth: number;
 
-  @Output() polygon = new EventEmitter<string>(); 
+  @Output() shapes = new EventEmitter<Shape>(); 
 
   private activePoint: number;
-  private points: Array<Point> = [];
-  private polygonPoints: string = "";
+  //private points: Array<Point> = [];
+  //private polygonPoints: string = "";
 
-  protected points$: BehaviorSubject<Array<Point>> = new BehaviorSubject<Array<Point>>([]);
+  //protected points$: BehaviorSubject<Array<Point>> = new BehaviorSubject<Array<Point>>([]);
+  //protected polygons$: BehaviorSubject<Array<Polygon>> = new BehaviorSubject<Array<Polygon>>([]);
 
-  private parentElement: HTMLElement;
-  private exampleBoxElement: HTMLElement;
   private movingDistance: any = null;
   private moveHandler = null;
+  private polygons: Array<Polygon> = [];
+  private currentPolygon: Polygon;
+
   constructor() { }
 
   ngOnInit() {
+    this.addPolygon();
     this.moveHandler = this.move.bind(this);
-    this.points$.subscribe(pts => {
+    /*this.points$.subscribe(pts => {
       this.polygonPoints = "";
       let i =0;
       for (i=0; i < pts.length; i++)
@@ -42,20 +46,27 @@ export class SvgComponent implements OnInit, OnDestroy {
         this.polygonPoints += pts[i].x + "," + pts[i].y;
       }
       this.polygon.emit(this.polygonPoints);
-    });
+    });*/
   }
 
   ngOnDestroy()
   {
-    this.points$.unsubscribe();
+    //this.points$.unsubscribe();
+  }
+
+  addPolygon()
+  {
+    const polygon = new Polygon();
+    this.polygons.push(polygon);
+    this.currentPolygon = polygon;
   }
 
   move(e) {
     console.log(e.currentTarget);
     const coords = this.getRelativeCoordinates(e);
-    this.points[this.activePoint].x = Math.round(coords.x);
-    this.points[this.activePoint].y = Math.round(coords.y);
-    this.points$.next(this.points);
+    this.currentPolygon.xpoints[this.activePoint] = Math.round(coords.x);
+    this.currentPolygon.ypoints[this.activePoint] = Math.round(coords.y);
+    //this.points$.next(this.points);
   };
 
   stopdrag(e) {
@@ -83,16 +94,24 @@ export class SvgComponent implements OnInit, OnDestroy {
     }
 
     console.log("x = " + coords.x + ", y = " + coords.y);
-    this.points.push(new Point(Math.round(coords.x), Math.round(coords.y)));
-    this.points$.next(this.points);
-    this.activePoint = (this.points.length - 1);
+    //this.points.push(new Point(Math.round(coords.x), Math.round(coords.y)));
+    this.currentPolygon.addPoint(Math.round(coords.x), Math.round(coords.y));
+    //this.points$.next(this.points);
+    this.activePoint = (this.currentPolygon.npoints - 1);
     event.currentTarget.addEventListener('mousemove', this.moveHandler);
   }
 
+  public record() 
+  {
+    this.activePoint = null;
+    this.shapes.emit(this.polygons);
+    this.addPolygon();
+  }
   public clear()
   {
-    this.points = [];
-    this.points$.next([]);
+    //this.points = [];
+    //this.points$.next([]);
+    this.currentPolygon.reset();
   }
 
   public rightClick(event: any)
@@ -105,68 +124,10 @@ export class SvgComponent implements OnInit, OnDestroy {
     if (index == -1)
       return false;
 
-    this.points.splice(index, 1);
-    this.points$.next(this.points);
-  }
-
-  onDragStarted(e: CdkDragStart)
-  {
-    const index = parseInt(e.source.element.nativeElement.getAttribute('data-index'));
-    if (isNaN(index))  
-      return;
-    //this.movingDistance = new Point(this.points[index].x, this.points[index].y);
-    //console.log("MOVING POINT", this.movingPoint);
-  }
-
-  onDragMoved(e: CdkDragMove) {
-    const index = parseInt(e.source.element.nativeElement.getAttribute('data-index'));
-    if (isNaN(index))  
-      return;
-    this.movingDistance = e.distance;
-    //console.log("X", this.movingPoint.x + "+" + e.distance.x);
-    //console.log("Y", this.movingPoint.y + "+" + e.distance.y);
-    //this.points[index].x = this.movingPoint.x + e.distance.x;
-    //this.points[index].y = this.movingPoint.y + e.distance.y;
-    //console.log("MOVING POINT AFTER MOVE", this.movingPoint);
-    //const coords = this.getRelativeCoordinates(e.event);
-    /*const rect = e.source.element.nativeElement.getBoundingClientRect();
-    const win = e.source.element.nativeElement.ownerDocument.defaultView;
-    const top = (rect.top + win.pageYOffset);
-    const left = (rect.left + win.pageXOffset);
-    const offsetX = (e.event.pageX - left);
-    const offsetY = (e.event.pageY - top);
-
-    this.points.push(new Point(Math.round(offsetX), Math.round(offsetY)));
-    this.points$.next(this.points);*/
-    /*console.log(e);
-    console.log("distance x = " + e.distance.x + ", y = " + e.distance.y);
-    const index = e.source.element.nativeElement.getAttribute('data-index');
-    if (!index)  
-      return;
-    this.points[index].x = e.distance.x;
-    this.points[index].y = e.distance.y;
-    this.points$.next(this.points);*/
-    //console.log("onDragMoved x = " + e.pointerPosition.x + ", y = " + e.pointerPosition.y);
-    /*console.log(event);
-    const coords = this.getRelativeCoordinates(event);*/
-    /*const fromLeftOfDraggedElement = e.pointerPosition.x;// - this.exampleBoxElement.getBoundingClientRect().left;
-    const fromTopOfDraggedElement = e.pointerPosition.y;// - this.exampleBoxElement.getBoundingClientRect().top;
-
-    const xRelativeToParent = e.pointerPosition.x - fromLeftOfDraggedElement - this.parentElement.getBoundingClientRect().left;
-    const yRelativeToParent = e.pointerPosition.y - fromTopOfDraggedElement - this.parentElement.getBoundingClientRect().top;
-    console.log(`Relative to .parent: ${xRelativeToParent}, ${yRelativeToParent}`);*/
-  }
-
-  onDragReleased(e: CdkDragRelease)
-  {
-    const index = parseInt(e.source.element.nativeElement.getAttribute('data-index'));
-    if (isNaN(index))  
-      return;
-      
-    this.points[index].x = this.points[index].x + this.movingDistance.x;
-    this.points[index].y = this.points[index].y + this.movingDistance.y;
-    this.movingDistance = null;
-    this.points$.next(this.points);
+    //this.points.splice(index, 1);
+    this.currentPolygon.xpoints.splice(index, 1);
+    this.currentPolygon.ypoints.splice(index, 1);
+    //this.points$.next(this.points);
   }
 
   private getRelativeCoordinates(event: any)
@@ -183,10 +144,10 @@ export class SvgComponent implements OnInit, OnDestroy {
 
   private findClickedPointIndex(coords: any): number
   {
-    for (let i = 0; i < this.points.length; i++) {
-      const dis = Math.sqrt(Math.pow(coords.x - this.points[i].x, 2) + Math.pow(coords.y - this.points[i].y, 2));
+    for (let i = 0; i < this.currentPolygon.npoints; i++) {
+      const dis = Math.sqrt(Math.pow(coords.x - this.currentPolygon.xpoints[i], 2) + Math.pow(coords.y - this.currentPolygon.ypoints[i], 2));
       if ( dis < 6 ) {
-        console.log("Point found at coordinates (" + this.points[i].x + "," + this.points[i].y + ")");
+        console.log("Point found at coordinates (" + this.currentPolygon.xpoints[i] + "," + this.currentPolygon.ypoints[i] + ")");
         return i;
       }
     }
