@@ -1,0 +1,6 @@
+<div><button (click)="clear()">Effacer</button></div>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" #parent width="1200" height="873" (mouseup)="stopdrag($event)" (contextmenu)="rightClick($event)" (mousedown)="managePoint($event)">
+    <image [attr.xlink:href]="image" x="0" y="0" height="873" width="1200"  />
+	<polygon [attr.points]="polygonPoints" [attr.stroke]="stroke" [attr.stroke-width]="strokeWidth" [attr.fill] ="fill"></polygon>
+    <rect *ngFor="let point of points; let i = index;" [id]="'p' + i" [attr.x]="point.x - 2" [attr.y]="point.y - 2" [attr.data-index]="i" width="4" height="4" fill="white" stroke="red" stroke-width="1"/>
+</svg>

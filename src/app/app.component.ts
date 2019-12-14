@@ -7,4 +7,11 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'svg-draw';
+  coords: string;
+
+  public updateCoords(event: string)
+  {
+    console.log(event);
+    this.coords = event;
+  }
 }
