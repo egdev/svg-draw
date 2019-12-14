@@ -13,7 +13,7 @@ export class AppComponent {
 
   public updateShapes(event: Array<Shape>)
   {
-    console.log(event);
     this.shapes = event;
+    console.log("SHAPES", this.shapes);
   }
 }

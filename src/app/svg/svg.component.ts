@@ -1,6 +1,4 @@
 import { Component, OnInit, OnDestroy, Input, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-import { Point } from './point';
 import { Polygon } from './polygon';
 import { Shape } from './shape';
 
@@ -18,35 +16,19 @@ export class SvgComponent implements OnInit, OnDestroy {
   @Input() stroke: string;
   @Input() strokeWidth: number;
 
-  @Output() shapes = new EventEmitter<Shape>(); 
+  @Output() shapes = new EventEmitter<Shape[]>(); 
 
   private activePoint: number;
-  //private points: Array<Point> = [];
-  //private polygonPoints: string = "";
-
-  //protected points$: BehaviorSubject<Array<Point>> = new BehaviorSubject<Array<Point>>([]);
-  //protected polygons$: BehaviorSubject<Array<Polygon>> = new BehaviorSubject<Array<Polygon>>([]);
-
-  private movingDistance: any = null;
   private moveHandler = null;
   private polygons: Array<Polygon> = [];
   private currentPolygon: Polygon;
+  private editShape: boolean = false;
 
   constructor() { }
 
   ngOnInit() {
     this.addPolygon();
     this.moveHandler = this.move.bind(this);
-    /*this.points$.subscribe(pts => {
-      this.polygonPoints = "";
-      let i =0;
-      for (i=0; i < pts.length; i++)
-      {
-        if (i > 0) this.polygonPoints += " ";
-        this.polygonPoints += pts[i].x + "," + pts[i].y;
-      }
-      this.polygon.emit(this.polygonPoints);
-    });*/
   }
 
   ngOnDestroy()
@@ -59,18 +41,16 @@ export class SvgComponent implements OnInit, OnDestroy {
     const polygon = new Polygon();
     this.polygons.push(polygon);
     this.currentPolygon = polygon;
+    this.shapes.emit(this.polygons.slice());
   }
 
   move(e) {
-    console.log(e.currentTarget);
     const coords = this.getRelativeCoordinates(e);
     this.currentPolygon.xpoints[this.activePoint] = Math.round(coords.x);
     this.currentPolygon.ypoints[this.activePoint] = Math.round(coords.y);
-    //this.points$.next(this.points);
   };
 
   stopdrag(e) {
-    console.log(e.currentTarget);
     console.log("STOP DRAG");
     e.currentTarget.removeEventListener('mousemove', this.moveHandler);
     this.activePoint = null;
@@ -94,23 +74,41 @@ export class SvgComponent implements OnInit, OnDestroy {
     }
 
     console.log("x = " + coords.x + ", y = " + coords.y);
-    //this.points.push(new Point(Math.round(coords.x), Math.round(coords.y)));
     this.currentPolygon.addPoint(Math.round(coords.x), Math.round(coords.y));
-    //this.points$.next(this.points);
     this.activePoint = (this.currentPolygon.npoints - 1);
     event.currentTarget.addEventListener('mousemove', this.moveHandler);
   }
 
+  editPolygon(event)
+  {
+    this.editShape = true;
+    console.log(event.currentTarget.getAttribute('data-index'));
+    this.currentPolygon = this.polygons[event.currentTarget.getAttribute('data-index')];
+    event.stopPropagation();
+  }
+
   public record() 
   {
+    if (this.currentPolygon.npoints < 3)
+    {
+      console.log("Polygon has no points !");
+      return;
+    }
+
     this.activePoint = null;
-    this.shapes.emit(this.polygons);
+    console.log("BEFORE SIZE", this.polygons.length);
+    this.shapes.emit(this.polygons.slice());
+    if (this.editShape)
+    {
+      this.editShape = false;
+      this.currentPolygon = this.polygons[this.polygons.length - 1];
+      return;
+    }
     this.addPolygon();
+    console.log("AFTER SIZE", this.polygons.length);
   }
   public clear()
   {
-    //this.points = [];
-    //this.points$.next([]);
     this.currentPolygon.reset();
   }
 
@@ -124,10 +122,7 @@ export class SvgComponent implements OnInit, OnDestroy {
     if (index == -1)
       return false;
 
-    //this.points.splice(index, 1);
-    this.currentPolygon.xpoints.splice(index, 1);
-    this.currentPolygon.ypoints.splice(index, 1);
-    //this.points$.next(this.points);
+    this.currentPolygon.removePoint(index);
   }
 
   private getRelativeCoordinates(event: any)

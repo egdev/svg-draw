@@ -1,6 +1,6 @@
-<div><button (click)="record()">Enregistrer forme</button><button (click)="clear()">Effacer</button></div>
+<div><button (click)="record()" [disabled]="currentPolygon.npoints < 3">Enregistrer forme</button><button (click)="clear()" [disabled]="currentPolygon.npoints == 0">Effacer</button></div>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" #parent width="1200" height="873" (mouseup)="stopdrag($event)" (contextmenu)="rightClick($event)" (mousedown)="managePoint($event)">
     <image [attr.xlink:href]="image" x="0" y="0" height="873" width="1200"  />
-	<polygon *ngFor="let polygon of polygons; let i = index;" [attr.points]="polygon.svgPoints()" [attr.stroke]="stroke" [attr.data-index]="i" [attr.stroke-width]="strokeWidth" [attr.fill] ="fill"></polygon>    
+	<polygon *ngFor="let polygon of polygons; let i = index;" [attr.points]="polygon.svgPoints()" [attr.stroke]="stroke" [attr.data-index]="i" [attr.stroke-width]="strokeWidth" [attr.fill] ="fill" (mousedown)="currentPolygon.npoints == 0 ? editPolygon($event) : false"></polygon>    
     <rect *ngFor="let idx of currentPolygon.xpoints; let j = index;" [id]="'p' + j" [attr.x]="currentPolygon.xpoints[j] - 2" [attr.y]="currentPolygon.ypoints[j] - 2" [attr.data-index]="j" width="4" height="4" fill="white" stroke="red" stroke-width="1"/>
 </svg>

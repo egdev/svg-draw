@@ -27,6 +27,13 @@ export class Polygon implements Shape {
             this.updateBounds(x, y);
     }
 
+    removePoint(index:number)
+    {
+        this.xpoints.splice(index, 1);
+        this.ypoints.splice(index, 1);
+        this.npoints--;
+    }
+
     updateBounds(x:number, y:number) {
         if (x < this.bounds.x) {
             this.bounds.width = this.bounds.width + (this.bounds.x - x);
