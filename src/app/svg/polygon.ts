@@ -27,6 +27,12 @@ export class Polygon implements Shape {
             this.updateBounds(x, y);
     }
 
+    canRecord():boolean
+    {
+        console.log("can record", this.npoints > 2);
+        return this.npoints > 2;
+    }
+
     removePoint(index:number)
     {
         this.xpoints.splice(index, 1);
@@ -65,5 +71,16 @@ export class Polygon implements Shape {
             str += this.xpoints[i] + "," + this.ypoints[i];
         }
         return str;
+    }
+
+    toHtml(attributes?: Array<any>)
+    {
+        let tag = document.createElement('polygon');
+        tag.setAttribute('points', this.svgPoints());
+        attributes.forEach(element => {
+            tag.setAttribute(element.name, element.value);
+        });
+        console.log(tag.outerHTML);
+        return tag.outerHTML;
     }
 }

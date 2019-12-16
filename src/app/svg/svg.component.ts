@@ -9,45 +9,44 @@ import { Shape } from './shape';
   styleUrls: ['./svg.component.css']
 })
 
-export class SvgComponent implements OnInit, OnDestroy {
-
+export class SvgComponent implements OnInit {
+  @Input() initialPolygons: Array<Polygon>;
   @Input() image: string;
   @Input() fill: string;
+  @Input() fillEdited: string;
   @Input() stroke: string;
   @Input() strokeWidth: number;
 
-  @Output() shapes = new EventEmitter<Shape[]>(); 
+  @Output() shapes = new EventEmitter<Polygon[]>(true); 
 
   private activePoint: number;
   private moveHandler = null;
-  private polygons: Array<Polygon> = [];
+  private createdPolygons: Array<Polygon> = [];
   private currentPolygon: Polygon;
   private editShape: boolean = false;
+  private attributes: Array<any> = [];
 
   constructor() { }
 
   ngOnInit() {
-    this.addPolygon();
+    this.createdPolygons = <Polygon[]>this.initialPolygons;
+    this.shapes.emit(this.createdPolygons.slice());
     this.moveHandler = this.move.bind(this);
-  }
-
-  ngOnDestroy()
-  {
-    //this.points$.unsubscribe();
+    this.attributes.push({ name: "fill", value: this.fill});
+    this.attributes.push({ name: "stroke", value: this.stroke});
   }
 
   addPolygon()
   {
     const polygon = new Polygon();
-    this.polygons.push(polygon);
     this.currentPolygon = polygon;
-    this.shapes.emit(this.polygons.slice());
   }
 
   move(e) {
     const coords = this.getRelativeCoordinates(e);
     this.currentPolygon.xpoints[this.activePoint] = Math.round(coords.x);
-    this.currentPolygon.ypoints[this.activePoint] = Math.round(coords.y);
+    this.currentPolygon.ypoints[this.activePoint] = Math.round(coords.y); 
+    
   };
 
   stopdrag(e) {
@@ -58,6 +57,9 @@ export class SvgComponent implements OnInit, OnDestroy {
 
   public managePoint(event: any)
   { 
+    if (!this.currentPolygon)
+      return;
+
     if (event.which === 3)  
       return false;
 
@@ -74,39 +76,51 @@ export class SvgComponent implements OnInit, OnDestroy {
     }
 
     console.log("x = " + coords.x + ", y = " + coords.y);
-    this.currentPolygon.addPoint(Math.round(coords.x), Math.round(coords.y));
-    this.activePoint = (this.currentPolygon.npoints - 1);
+    if (this.isPolygon(this.currentPolygon))
+    {
+      this.currentPolygon.addPoint(Math.round(coords.x), Math.round(coords.y));
+      this.activePoint = (this.currentPolygon.npoints - 1);
+    }
     event.currentTarget.addEventListener('mousemove', this.moveHandler);
   }
+
+  isPolygon(shape: Shape)
+  {
+    return (shape instanceof Polygon);
+  } 
 
   editPolygon(event)
   {
     this.editShape = true;
     console.log(event.currentTarget.getAttribute('data-index'));
-    this.currentPolygon = this.polygons[event.currentTarget.getAttribute('data-index')];
+    this.currentPolygon = this.createdPolygons.slice(event.currentTarget.getAttribute('data-index'))[0];
+    console.log("INSTANCE OF", this.currentPolygon instanceof Polygon)
     event.stopPropagation();
   }
 
   public record() 
   {
-    if (this.currentPolygon.npoints < 3)
+    if (!this.currentPolygon)
+      return;
+
+    if (!this.currentPolygon.canRecord())
     {
       console.log("Polygon has no points !");
       return;
     }
 
     this.activePoint = null;
-    console.log("BEFORE SIZE", this.polygons.length);
-    this.shapes.emit(this.polygons.slice());
+    console.log("BEFORE SIZE", this.createdPolygons.length);
     if (this.editShape)
-    {
       this.editShape = false;
-      this.currentPolygon = this.polygons[this.polygons.length - 1];
-      return;
-    }
-    this.addPolygon();
-    console.log("AFTER SIZE", this.polygons.length);
+    else
+      this.createdPolygons.push(this.currentPolygon);
+
+    this.shapes.emit(this.createdPolygons.slice());
+    this.currentPolygon = null;
+    console.log("AFTER SIZE", this.createdPolygons.length);
   }
+
   public clear()
   {
     this.currentPolygon.reset();

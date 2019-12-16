@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { Shape } from './svg/shape';
-import { Polygon } from './svg/polygon';
+import { Shape } from '../svg/shape';
+import { Polygon } from '../svg/polygon';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  selector: 'app-svg-admin',
+  templateUrl: './svg-admin.component.html',
+  styleUrls: ['./svg-admin.component.css']
 })
-export class AppComponent implements OnInit {
-  title = 'svg-draw';
+export class SvgAdminComponent implements OnInit {
+
+  constructor() { }
+
   coords: string;
   private shapes: Array<Shape> = [];
   private initialPolygons: Array<Polygon> = [];
@@ -27,4 +29,5 @@ export class AppComponent implements OnInit {
     this.shapes = event;
     console.log("SHAPES", this.shapes);
   }
+
 }
