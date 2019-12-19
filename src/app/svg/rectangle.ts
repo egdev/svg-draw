@@ -41,6 +41,7 @@ export class Rectangle implements Shape {
 
     getTransformHtml()
     {
+        return "translate(" + this.transform.x + ", " + this.transform.y + ")";
     }
 
     canSave() : boolean
