@@ -1,0 +1,6 @@
+polygon:hover, rect:hover {
+    cursor: pointer;
+    filter: url(#shadow);
+    fill: rgba(0, 157, 223, 0.2);    
+}
+

@@ -7,13 +7,15 @@ import { AppComponent } from './app.component';
 import { SvgComponent } from './svg/svg.component';
 import { SvgViewComponent } from './svg-view/svg-view.component';
 import { SvgAdminComponent } from './svg-admin/svg-admin.component';
+import { FrontComponent } from './front/front.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SvgComponent,
     SvgViewComponent,
-    SvgAdminComponent
+    SvgAdminComponent,
+    FrontComponent
   ],
   imports: [
     BrowserModule,

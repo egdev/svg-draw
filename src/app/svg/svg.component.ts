@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, Input, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
 import { Polygon } from './polygon';
-import { Shape, ShapeType } from './shape';
+import { Shape, ShapeType, isPolygon, isRectangle } from './shape';
 import { Rectangle } from './rectangle';
 import { DomSanitizer } from '@angular/platform-browser';
 
@@ -11,28 +11,53 @@ import { DomSanitizer } from '@angular/platform-browser';
   styleUrls: ['./svg.component.css']
 })
 
-export class SvgComponent implements OnInit {
+export class SvgComponent implements OnInit, OnDestroy {
   @Input() initialShapes: Array<ShapeType>;
   @Input() image: string;
-  @Input() fill: string;
-  @Input() fillEdited: string;
-  @Input() stroke: string;
-  @Input() strokeWidth: number;
+  @Input() attributes: any = { fill: 'red', 'stroke-width' : 1, stroke: 'black' };
 
   @Output() updateShapes = new EventEmitter<ShapeType[]>(true); 
 
   private activePoint: number;
   private moveHandler = null;
+  private dragHandler = null;
+  private keyHandler = null;
   private shapes: Array<ShapeType> = [];
   private currentShape: ShapeType;
   private editShape: boolean = false;
+  private dragElement: any;
+  private dragOffset: any;
+  private transform: any;
+  private isPolygon: any;
+  private isRectangle: any;
 
   constructor(private sanitizer: DomSanitizer) { }
 
   ngOnInit() {
+    this.isPolygon = isPolygon;
+    this.isRectangle = isRectangle;
     this.shapes = this.initialShapes;
     this.updateShapes.emit(this.shapes.slice());
     this.moveHandler = this.move.bind(this);
+    this.dragHandler = this.drag.bind(this);
+    this.keyHandler = this.manageKey.bind(this);
+    window.addEventListener('keydown', this.keyHandler);
+  }
+
+  ngOnDestroy()
+  {
+    window.removeEventListener('keydown', this.keyHandler);
+  }
+
+  manageKey(event)
+  {
+    //event.preventDefault();
+    //event.stopPropagation();
+
+    if (event.keyCode != 13)
+      return;
+
+    this.record();
   }
 
   add(type:string)
@@ -62,7 +87,7 @@ export class SvgComponent implements OnInit {
     this.currentShape = new Rectangle(0, 0, 0, 0);
   }
 
-  isPolygon(shape: ShapeType) : shape is Polygon
+  /*isPolygon(shape: ShapeType) : shape is Polygon
   {
     return shape instanceof Polygon;
   }
@@ -70,26 +95,27 @@ export class SvgComponent implements OnInit {
   isRectangle(shape: ShapeType) : shape is Rectangle
   {
     return shape instanceof Rectangle;
-  }
+  }*/
 
   getHtml(shape)
   {
-    return this.sanitizer.bypassSecurityTrustHtml(shape.buildHtml({fill: this.fill, stroke: this.stroke, "stroke-wdith": this.strokeWidth }));
+    return this.sanitizer.bypassSecurityTrustHtml(shape.buildHtml(this.attributes));
   }
 
   move(e) {
-    const coords = this.getRelativeCoordinates(e);
-    
-    if (this.isPolygon(this.currentShape))
+    let coords = this.getRelativeCoordinates(e);
+    coords.x -= this.currentShape.transform.x;
+    coords.y -= this.currentShape.transform.y;
+
+    if (isPolygon(this.currentShape))
     {
       this.currentShape.xpoints[this.activePoint] = Math.round(coords.x);
       this.currentShape.ypoints[this.activePoint] = Math.round(coords.y);
     }
-    else if (this.isRectangle(this.currentShape))
+    else if (isRectangle(this.currentShape))
     {
       let w, h, x, y;
 
-      console.log("EDIT RECTANGLE");
       // found which corner has been clicked
       if (this.activePoint == 0)
       {
@@ -122,7 +148,6 @@ export class SvgComponent implements OnInit {
         y = this.currentShape.y;
         w = Math.round(this.currentShape.xpoints[1] - x);
         h = Math.round(coords.y - this.currentShape.ypoints[0]);
-
       }
 
       if (w > 4)
@@ -144,16 +169,15 @@ export class SvgComponent implements OnInit {
   };
 
   stopdrag(e) {
-    console.log("STOP DRAG");
     e.currentTarget.removeEventListener('mousemove', this.moveHandler);
     this.activePoint = null;
   };
 
-  public managePoint(event: any)
+  managePoint(event: any)
   { 
     if (!this.currentShape)
     {
-      alert('You must add a shape !');
+      alert('Vous devez ajouter une forme !');
       return;
     }
 
@@ -163,24 +187,21 @@ export class SvgComponent implements OnInit {
     event.preventDefault();
     
     const coords = this.getRelativeCoordinates(event);
-    const index = this.findClickedPointIndex(coords);
+    const index = this.findClickedPointIndex(coords, this.currentShape.getTransform());
     if (index != -1) // click on a point
     {
       this.activePoint = index;
-      console.log("Click on point " + this.activePoint);
       event.currentTarget.addEventListener('mousemove', this.moveHandler);       
       return false;
     }
 
-    console.log("x = " + coords.x + ", y = " + coords.y);
-    
-    if (this.isPolygon(this.currentShape))
+    if (isPolygon(this.currentShape))
     {
-      this.currentShape.addPoint(Math.round(coords.x), Math.round(coords.y));
+      this.currentShape.addPoint(Math.round(coords.x - this.currentShape.transform.x), Math.round(coords.y - this.currentShape.transform.y));
       this.activePoint = (this.currentShape.npoints - 1);
       event.currentTarget.addEventListener('mousemove', this.moveHandler);
     }
-    else if (this.isRectangle(this.currentShape))
+    else if (isRectangle(this.currentShape))
     {
       this.currentShape.addPoint(Math.round(coords.x), Math.round(coords.y));
     }
@@ -194,14 +215,69 @@ export class SvgComponent implements OnInit {
     this.currentShape = this.shapes[idx];//JSON.parse(JSON.stringify(this.shapes[idx]));    
   }
 
-  public record() 
+  getMousePosition(evt) {
+    var CTM = document.getElementsByTagName('svg')[0].getScreenCTM();
+    return {
+      x: (evt.clientX - CTM.e) / CTM.a,
+      y: (evt.clientY - CTM.f) / CTM.d
+    };
+  }
+
+  startDrag(event)
   {
+    //event.preventDefault();
+    event.stopPropagation();
+    //this.dragElement = event.target;
+    this.dragOffset = this.getMousePosition(event);
+    
+    var transforms = event.target.transform.baseVal;
+    // Ensure the first transform is a translate transform
+    if (transforms.length === 0 ||
+        transforms.getItem(0).type !== SVGTransform.SVG_TRANSFORM_TRANSLATE) {
+      // Create an transform that translates by (0, 0)
+      var translate = document.getElementsByTagName('svg')[0].createSVGTransform();
+      translate.setTranslate(0, 0);
+      // Add the translation to the front of the transforms list
+      event.target.transform.baseVal.insertItemBefore(translate, 0);
+    }
+    // Get initial translation amount
+    this.transform = transforms.getItem(0);
+    this.dragOffset.x -= this.transform.matrix.e;
+    this.dragOffset.y -= this.transform.matrix.f;
+    
+    event.target.addEventListener('mousemove', this.dragHandler); 
+  }
+
+  drag(event)
+  {
+    event.preventDefault();
+    this.dragElement = event.target;
+    if (this.dragElement)
+    {
+      var coord = this.getMousePosition(event);
+      this.transform.setTranslate(coord.x - this.dragOffset.x, coord.y - this.dragOffset.y);
+      const idx = parseInt(this.dragElement.getAttribute('data-index'));
+      this.shapes[idx].setTransform({ x: (coord.x - this.dragOffset.x), y: (coord.y - this.dragOffset.y) });
+    }
+  }
+
+  stopShapeDrag(event)
+  {
+    event.preventDefault();
+    event.stopPropagation();
+    this.dragElement.removeEventListener('mousemove', this.dragHandler);
+    this.dragElement = null;
+  }
+
+  record() 
+  {
+    console.log("RECORD");
     if (!this.currentShape)
       return;
 
     if (!this.currentShape.canSave())
     {
-      console.log("Cannot save shape !");
+      console.log("Impossible d'enregistrer la forme !");
       return;
     }
 
@@ -212,7 +288,6 @@ export class SvgComponent implements OnInit {
       this.shapes.push(this.currentShape);
     this.currentShape = null;
     this.updateShapes.emit(this.shapes);
-    console.log("AFTER SIZE", this.shapes.length);
   }
 
   public deleteShape()
@@ -233,14 +308,13 @@ export class SvgComponent implements OnInit {
   public rightClick(event: any)
   {
     event.preventDefault();
-    console.log("rightCLick");
 
     const coords = this.getRelativeCoordinates(event);
-    const index = this.findClickedPointIndex(coords);
+    const index = this.findClickedPointIndex(coords, this.currentShape.getTransform());
     if (index == -1)
       return false;
 
-    if (this.isPolygon(this.currentShape))
+    if (isPolygon(this.currentShape))
       (this.currentShape as Polygon).removePoint(index);
   }
 
@@ -256,12 +330,12 @@ export class SvgComponent implements OnInit {
     return { x: offsetX, y: offsetY };
   }
 
-  private findClickedPointIndex(coords: any): number
+  private findClickedPointIndex(coords: any, transform: any): number
   {
     for (let i = 0; i < this.currentShape.npoints; i++) {
-      const dis = Math.sqrt(Math.pow(coords.x - this.currentShape.xpoints[i], 2) + Math.pow(coords.y - this.currentShape.ypoints[i], 2));
+      const dis = Math.sqrt(Math.pow(coords.x - (this.currentShape.xpoints[i] + transform.x), 2) + Math.pow(coords.y - (this.currentShape.ypoints[i] + transform.y), 2));
       if ( dis < 6 ) {
-        console.log("Point found at coordinates (" + this.currentShape.xpoints[i] + "," + this.currentShape.ypoints[i] + ")");
+        console.log("Point found at coordinates (" + (this.currentShape.xpoints[i] + transform.x) + "," + (this.currentShape.ypoints[i] + transform.y) + ")");
         return i;
       }
     }

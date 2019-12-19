@@ -5,10 +5,17 @@ export class Polygon implements Shape {
     xpoints: Array<number> = [];
     ypoints: Array<number> = [];
     bounds: any;
+    transform: any = { x: 0, y: 0 };
 
     private static MIN_MENGTH: number = 4;
 
-    constructor() { }
+    constructor(points?: any[]) { 
+        if (points)
+        {
+            for (let i = 0; i < points.length; i++)
+                this.addPoint(points[i].x, points[i].y);
+        }
+    }
 
     addPoint(x:number, y:number)
     {
@@ -51,6 +58,21 @@ export class Polygon implements Shape {
         }
     }
 
+    setTransform(transform: any)
+    {
+        this.transform = transform;
+    }
+
+    getTransform()
+    {
+        return this.transform;
+    }
+
+    getTransformHtml()
+    {
+        return "translate(" + this.transform.x + ", " + this.transform.y + ")";
+    }
+
     svgPoints()
     {
         let str = "";
@@ -68,12 +90,14 @@ export class Polygon implements Shape {
     {
         let p = document.createElement('polygon');
         p.setAttribute("points", this.svgPoints());
+        p.setAttribute("transform", this.getTransformHtml());
+
         if (attributes)
         {
             for (let key in attributes)
                 p.setAttribute(key, attributes[key]);
         }
-
+        
         return p.outerHTML;
     }
 }

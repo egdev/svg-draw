@@ -5,7 +5,7 @@ export class Rectangle implements Shape {
     y: number;
     width: number;
     height: number;
-    
+    transform: any = { x: 0, y: 0 };
     xpoints: number[] = [];
     ypoints: number[] = [];
     npoints: number = 0;
@@ -27,6 +27,20 @@ export class Rectangle implements Shape {
         this.ypoints.push(y + height);
         this.xpoints.push(x);
         this.ypoints.push(y + height);
+    }
+
+    setTransform(transform: any)
+    {
+        this.transform = transform;
+    }
+    
+    getTransform()
+    {
+        return this.transform;
+    }
+
+    getTransformHtml()
+    {
     }
 
     canSave() : boolean
@@ -104,6 +118,7 @@ export class Rectangle implements Shape {
         p.setAttribute("y", this.y.toString());
         p.setAttribute("width", this.width.toString());
         p.setAttribute("height", this.height.toString());
+        p.setAttribute("transform", this.getTransformHtml());
 
         if (attributes)
         {

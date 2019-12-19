@@ -9,14 +9,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" #parent width="1200" height="873" (mouseup)="stopdrag($event)" (contextmenu)="rightClick($event)" (mousedown)="managePoint($event)">
     <image [attr.xlink:href]="image" x="0" y="0" height="873" width="1200"  />
     <ng-container *ngFor="let shape of shapes; let i = index;">
-        <polygon *ngIf="isPolygon(shape) && shape != currentShape" [attr.points]="shape.svgPoints()" [attr.stroke]="stroke" [attr.data-index]="i" [attr.stroke-width]="strokeWidth" [attr.fill] ="fill" (mousedown)="!editShape && !currentShape ? edit($event) : false" />
-        <rect *ngIf="isRectangle(shape) && shape != currentShape" [attr.x]="shape.x" [attr.y]="shape.y" [attr.width]="shape.width" [attr.height]="shape.height" [attr.stroke]="stroke" [attr.data-index]="i" [attr.stroke-width]="strokeWidth" [attr.fill] ="fill" (mousedown)="!editShape && !currentShape ? edit($event) : false" />
+        <polygon *ngIf="isPolygon(shape) && shape != currentShape" [attr.transform]="shape.getTransformHtml()" [attr.points]="shape.svgPoints()" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" (mousedown)="!editShape ? startDrag($event) : false" (mouseup)="dragElement ? stopShapeDrag($event) : (!editShape && !currentShape ? edit($event) : false)" />
+        <rect *ngIf="isRectangle(shape) && shape != currentShape" [attr.transform]="shape.getTransformHtml()" [attr.x]="shape.x" [attr.y]="shape.y" [attr.width]="shape.width" [attr.height]="shape.height" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" (mousedown)="!editShape ? startDrag($event) : false" (mouseup)="dragElement ? stopShapeDrag($event) : (!editShape && !currentShape ? edit($event) : false)" />
     </ng-container>
     <ng-container *ngIf="currentShape">
-        <polygon *ngIf="isPolygon(currentShape)" [attr.points]="currentShape.svgPoints()" [attr.stroke]="stroke" [attr.stroke-width]="strokeWidth" [attr.fill] ="fillEdited" />
-        <rect *ngIf="isRectangle(currentShape)" [attr.x]="currentShape.x" [attr.y]="currentShape.y" [attr.width]="currentShape.width" [attr.height]="currentShape.height" [attr.fill]="fillEdited" [attr.stroke]="stroke" [attr.stroke-width]="strokeWidth"/>
+        <polygon *ngIf="isPolygon(currentShape)" [attr.transform]="currentShape.getTransformHtml()" [attr.points]="currentShape.svgPoints()" [attr.stroke]="stroke" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes['fill-edited']" />
+        <rect *ngIf="isRectangle(currentShape)" [attr.transform]="currentShape.getTransformHtml()" [attr.x]="currentShape.x" [attr.y]="currentShape.y" [attr.width]="currentShape.width" [attr.height]="currentShape.height" [attr.fill]="attributes['fill-edited']" [attr.stroke]="attributes.stroke" [attr.stroke-width]="attributes['stroke-width']"/>
     </ng-container>
     <ng-container *ngIf="currentShape">
-        <rect *ngFor="let idx of currentShape.xpoints; let j = index;" [id]="'p' + j" [attr.x]="currentShape.xpoints[j] - 2" [attr.y]="currentShape.ypoints[j] - 2" [attr.data-index]="j" width="4" height="4" fill="white" stroke="red" stroke-width="1"/>
+        <rect *ngFor="let idx of currentShape.xpoints; let j = index;" [id]="'p' + j" [attr.transform]="currentShape.getTransformHtml()" [attr.x]="currentShape.xpoints[j] - 2" [attr.y]="currentShape.ypoints[j] - 2" [attr.data-index]="j" width="4" height="4" fill="white" stroke="red" stroke-width="1"/>
     </ng-container>
 </svg>

@@ -1,1 +1,13 @@
-<p>svg-view works!</p>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="873">
+    <defs>
+        <filter id="shadow" x="-10%" y="-10%" width="300%" height="300%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="5" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="xor"/>
+        </filter>
+    </defs>
+    <image [attr.xlink:href]="image" x="0" y="0" height="873" width="1200"  />
+    <ng-container *ngFor="let shape of shapes; let i = index;">
+        <polygon *ngIf="isPolygon(shape)" [attr.transform]="shape.getTransformHtml()" [attr.points]="shape.svgPoints()" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" />
+        <rect *ngIf="isRectangle(shape)" [attr.transform]="shape.getTransformHtml()" [attr.x]="shape.x" [attr.y]="shape.y" [attr.width]="shape.width" [attr.height]="shape.height" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" />
+    </ng-container>
+</svg>
