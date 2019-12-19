@@ -10,14 +10,6 @@ export class Polygon implements Shape {
 
     constructor() { }
 
-    reset()
-    {
-        this.npoints = 0;
-        this.bounds = null;
-        this.xpoints.splice(0);
-        this.ypoints.splice(0);
-    } 
-
     addPoint(x:number, y:number)
     {
         this.xpoints.push(x);
@@ -27,9 +19,8 @@ export class Polygon implements Shape {
             this.updateBounds(x, y);
     }
 
-    canRecord():boolean
+    canSave() : boolean
     {
-        console.log("can record", this.npoints > 2);
         return this.npoints > 2;
     }
 
@@ -73,14 +64,16 @@ export class Polygon implements Shape {
         return str;
     }
 
-    toHtml(attributes?: Array<any>)
+    buildHtml(attributes?: any)
     {
-        let tag = document.createElement('polygon');
-        tag.setAttribute('points', this.svgPoints());
-        attributes.forEach(element => {
-            tag.setAttribute(element.name, element.value);
-        });
-        console.log(tag.outerHTML);
-        return tag.outerHTML;
+        let p = document.createElement('polygon');
+        p.setAttribute("points", this.svgPoints());
+        if (attributes)
+        {
+            for (let key in attributes)
+                p.setAttribute(key, attributes[key]);
+        }
+
+        return p.outerHTML;
     }
 }
