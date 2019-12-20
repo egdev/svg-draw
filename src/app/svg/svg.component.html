@@ -13,7 +13,7 @@
         <rect *ngIf="isRectangle(shape) && shape != currentShape" [attr.transform]="shape.getTransformHtml()" [attr.x]="shape.x" [attr.y]="shape.y" [attr.width]="shape.width" [attr.height]="shape.height" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" (mousedown)="!editShape ? startDrag($event) : false" (mouseup)="dragElement ? stopShapeDrag($event) : (!editShape && !currentShape ? edit($event) : false)" />
     </ng-container>
     <ng-container *ngIf="currentShape">
-        <polygon *ngIf="isPolygon(currentShape)" [attr.transform]="currentShape.getTransformHtml()" [attr.points]="currentShape.svgPoints()" [attr.stroke]="stroke" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes['fill-edited']" />
+        <polygon *ngIf="isPolygon(currentShape)" [attr.transform]="currentShape.getTransformHtml()" [attr.points]="currentShape.svgPoints()" [attr.stroke]="attributes.stroke" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes['fill-edited']" />
         <rect *ngIf="isRectangle(currentShape)" [attr.transform]="currentShape.getTransformHtml()" [attr.x]="currentShape.x" [attr.y]="currentShape.y" [attr.width]="currentShape.width" [attr.height]="currentShape.height" [attr.fill]="attributes['fill-edited']" [attr.stroke]="attributes.stroke" [attr.stroke-width]="attributes['stroke-width']"/>
     </ng-container>
     <ng-container *ngIf="currentShape">

@@ -54,10 +54,13 @@ export class SvgComponent implements OnInit, OnDestroy {
     //event.preventDefault();
     //event.stopPropagation();
 
-    if (event.keyCode != 13)
+    if (!this.currentShape || (event.keyCode != 13 && event.keyCode != 46))
       return;
 
-    this.record();
+    if (event.keyCode == 13)
+      this.record();
+    else if (event.keyCode == 46)
+      this.deleteShape();
   }
 
   add(type:string)
