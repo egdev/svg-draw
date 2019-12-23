@@ -2,6 +2,6 @@
     <input type="text" [value]="shape.buildHtml(attributes)" size="100" readonly />
     <br />
 </ng-container>
-<app-svg image="/assets/vue_eclatee.jpg" [attributes]="attributes" [initialShapes]="initialShapes" (updateShapes)="updateShapes($event)"></app-svg>
+<app-svg image="/assets/vue_eclatee.jpg" width="1200" height="873" [attributes]="attributes" [initialShapes]="initialShapes" (updateShapes)="updateShapes($event)"></app-svg>
 <app-svg-view image="/assets/vue_eclatee.jpg" [attributes]="viewAttributes" [shapes]="shapes"></app-svg-view>
 <router-outlet></router-outlet>

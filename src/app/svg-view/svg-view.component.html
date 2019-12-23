@@ -7,7 +7,7 @@
     </defs>
     <image [attr.xlink:href]="image" x="0" y="0" height="873" width="1200"  />
     <ng-container *ngFor="let shape of shapes; let i = index;">
-        <polygon *ngIf="isPolygon(shape)" [attr.transform]="shape.getTransformHtml()" [attr.points]="shape.svgPoints()" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" />
-        <rect *ngIf="isRectangle(shape)" [attr.transform]="shape.getTransformHtml()" [attr.x]="shape.x" [attr.y]="shape.y" [attr.width]="shape.width" [attr.height]="shape.height" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" />
+        <polygon *ngIf="shapeUtils.isPolygon(shape)" [attr.transform]="shape.getTransformHtml()" [attr.points]="shape.svgPoints()" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" />
+        <rect *ngIf="shapeUtils.isRectangle(shape)" [attr.transform]="shape.getTransformHtml()" [attr.x]="shape.x" [attr.y]="shape.y" [attr.width]="shape.width" [attr.height]="shape.height" [attr.stroke]="attributes.stroke" [attr.data-index]="i" [attr.stroke-width]="attributes['stroke-width']" [attr.fill] ="attributes.fill" />
     </ng-container>
 </svg>

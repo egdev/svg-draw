@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, ViewEncapsulation, OnChanges, SimpleChanges } from '@angular/core';
-import { ShapeType, isRectangle, isPolygon } from '../svg/shape';
+import { ShapeType } from '../svg/shape';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ShapeUtils } from '../svg/shape-utils.service';
 
 @Component({
   selector: 'app-svg-view',
@@ -8,18 +9,13 @@ import { DomSanitizer } from '@angular/platform-browser';
   styleUrls: ['./svg-view.component.css']
 })
 export class SvgViewComponent implements OnInit, OnChanges {
-  @Input() shapes: Array<ShapeType>;
-  @Input() image: string;
+  @Input() shapes: Array<ShapeType> = [];
+  @Input() image: string = "";
   @Input() attributes: any;
 
-  private isPolygon: any;
-  private isRectangle: any;
-
-  constructor(private sanitizer: DomSanitizer) { }
+  constructor(private sanitizer: DomSanitizer, private shapeUtils: ShapeUtils) { }
 
   ngOnInit() {
-    this.isRectangle = isRectangle;
-    this.isPolygon = isPolygon;
   }
 
   ngOnChanges(changes: SimpleChanges)

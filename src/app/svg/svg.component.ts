@@ -1,8 +1,9 @@
-import { Component, OnInit, OnDestroy, Input, EventEmitter, Output, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, EventEmitter, Output } from '@angular/core';
 import { Polygon } from './polygon';
-import { Shape, ShapeType, isPolygon, isRectangle } from './shape';
+import { ShapeType } from './shape';
 import { Rectangle } from './rectangle';
 import { DomSanitizer } from '@angular/platform-browser';
+import { ShapeUtils } from './shape-utils.service';
 
 
 @Component({
@@ -12,30 +13,28 @@ import { DomSanitizer } from '@angular/platform-browser';
 })
 
 export class SvgComponent implements OnInit, OnDestroy {
-  @Input() initialShapes: Array<ShapeType>;
-  @Input() image: string;
+  @Input() initialShapes: Array<ShapeType> = [];
+  @Input() image: string = "";
   @Input() attributes: any = { fill: 'red', 'stroke-width' : 1, stroke: 'black' };
+  @Input() width: number = 0;
+  @Input() height: number = 0;
 
   @Output() updateShapes = new EventEmitter<ShapeType[]>(true); 
 
-  private activePoint: number;
-  private moveHandler = null;
-  private dragHandler = null;
-  private keyHandler = null;
+  private activePoint: number | null = null;
+  private moveHandler;
+  private dragHandler;
+  private keyHandler;
   private shapes: Array<ShapeType> = [];
-  private currentShape: ShapeType;
+  private currentShape: ShapeType | null = null;
   private editShape: boolean = false;
   private dragElement: any;
   private dragOffset: any;
   private transform: any;
-  private isPolygon: any;
-  private isRectangle: any;
 
-  constructor(private sanitizer: DomSanitizer) { }
+  constructor(private sanitizer: DomSanitizer, private shapeUtils: ShapeUtils) { }
 
   ngOnInit() {
-    this.isPolygon = isPolygon;
-    this.isRectangle = isRectangle;
     this.shapes = this.initialShapes;
     this.updateShapes.emit(this.shapes.slice());
     this.moveHandler = this.move.bind(this);
@@ -49,7 +48,7 @@ export class SvgComponent implements OnInit, OnDestroy {
     window.removeEventListener('keydown', this.keyHandler);
   }
 
-  manageKey(event)
+  manageKey(event: KeyboardEvent)
   {
     //event.preventDefault();
     //event.stopPropagation();
@@ -90,16 +89,6 @@ export class SvgComponent implements OnInit, OnDestroy {
     this.currentShape = new Rectangle(0, 0, 0, 0);
   }
 
-  /*isPolygon(shape: ShapeType) : shape is Polygon
-  {
-    return shape instanceof Polygon;
-  }
-
-  isRectangle(shape: ShapeType) : shape is Rectangle
-  {
-    return shape instanceof Rectangle;
-  }*/
-
   getHtml(shape)
   {
     return this.sanitizer.bypassSecurityTrustHtml(shape.buildHtml(this.attributes));
@@ -110,12 +99,12 @@ export class SvgComponent implements OnInit, OnDestroy {
     coords.x -= this.currentShape.transform.x;
     coords.y -= this.currentShape.transform.y;
 
-    if (isPolygon(this.currentShape))
+    if (this.shapeUtils.isPolygon(this.currentShape))
     {
       this.currentShape.xpoints[this.activePoint] = Math.round(coords.x);
       this.currentShape.ypoints[this.activePoint] = Math.round(coords.y);
     }
-    else if (isRectangle(this.currentShape))
+    else if (this.shapeUtils.isRectangle(this.currentShape))
     {
       let w, h, x, y;
 
@@ -198,13 +187,13 @@ export class SvgComponent implements OnInit, OnDestroy {
       return false;
     }
 
-    if (isPolygon(this.currentShape))
+    if (this.shapeUtils.isPolygon(this.currentShape))
     {
       this.currentShape.addPoint(Math.round(coords.x - this.currentShape.transform.x), Math.round(coords.y - this.currentShape.transform.y));
       this.activePoint = (this.currentShape.npoints - 1);
       event.currentTarget.addEventListener('mousemove', this.moveHandler);
     }
-    else if (isRectangle(this.currentShape))
+    else if (this.shapeUtils.isRectangle(this.currentShape))
     {
       this.currentShape.addPoint(Math.round(coords.x), Math.round(coords.y));
     }
@@ -317,8 +306,8 @@ export class SvgComponent implements OnInit, OnDestroy {
     if (index == -1)
       return false;
 
-    if (isPolygon(this.currentShape))
-      (this.currentShape as Polygon).removePoint(index);
+    if (this.shapeUtils.isPolygon(this.currentShape))
+      this.currentShape.removePoint(index);
   }
 
   private getRelativeCoordinates(event: any)

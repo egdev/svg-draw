@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Shape, ShapeType } from '../svg/shape';
+import { ShapeType } from '../svg/shape';
 import { Polygon } from '../svg/polygon';
 import { Rectangle } from '../svg/rectangle';
 
